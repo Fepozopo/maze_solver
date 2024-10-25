@@ -1,15 +1,14 @@
-from window import Window, Point, Line
+from maze import Window, Line, Point, Cell, Maze
 
 
 def main():
     window = Window(800, 600)
 
-    # Draw a few lines
-    window.draw_line(Line(Point(0, 0), Point(800, 600)), 'black')
-    window.draw_line(Line(Point(0, 600), Point(800, 0)), 'black')
+    num_cols = 12
+    num_rows = 10
+    Maze(0, 0, num_rows, num_cols, 10, 10, window)
 
     window.wait_for_close()
-
 
 
 
