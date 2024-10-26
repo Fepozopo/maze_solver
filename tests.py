@@ -17,6 +17,32 @@ class Tests(unittest.TestCase):
             num_rows,
         )
 
+    def test_maze_draw_cell(self):
+        num_cols = 12
+        num_rows = 10
+        m1 = Maze(0, 0, num_rows, num_cols, 10, 10)
+        m1._draw_cell(0, 0)
+        self.assertEqual(
+            m1.cells[0][0]._x1,
+            0,
+        )
+        self.assertEqual(
+            m1.cells[0][0]._y1,
+            0,
+        )
+        self.assertEqual(
+            m1.cells[0][0]._x2,
+            10,
+        )
+        self.assertEqual(
+            m1.cells[0][0]._y2,
+            10,
+        )
+        self.assertEqual(
+            m1.cells[0][0]._win,
+            m1._win,
+        )
+
 
 
 if __name__ == "__main__":

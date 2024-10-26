@@ -4,21 +4,21 @@ from time import sleep
 
 class Window:
     def __init__(self, width, height):
-        self.root = Tk()
-        self.root.title("Maze Solver")
+        self.__root = Tk()
+        self.__root.title("Maze Solver")
         self.width = width
         self.height = height
-        self.canvas = Canvas(self.root, width=self.width, height=self.height)
+        self.canvas = Canvas(self.__root, width=self.width, height=self.height)
         self.canvas.pack()
         self.running = False
-        self.root.protocol("WM_DELETE_WINDOW", self.close)
+        self.__root.protocol("WM_DELETE_WINDOW", self.close)
 
     def redraw(self):
         '''
         Call the root widget's update_idletasks() and update() methods to redraw the canvas.
         '''
-        self.root.update_idletasks()
-        self.root.update()
+        self.__root.update_idletasks()
+        self.__root.update()
 
     def wait_for_close(self):
         '''
