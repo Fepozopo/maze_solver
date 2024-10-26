@@ -81,22 +81,34 @@ class Cell:
         """
         Draw the cell's walls based on their existence state
         """
-        # Create lines for each existing wall
+        # Create lines for each existing wall. Draw a black line if the wall exists, otherwise draw a white line
         if self.has_left_wall:
             line = Line(Point(self._x1, self._y1), Point(self._x1, self._y2))
             self._win.draw_line(line, "black")
+        else:
+            line = Line(Point(self._x1, self._y1), Point(self._x1, self._y2))
+            self._win.draw_line(line, "white")
             
         if self.has_top_wall:
             line = Line(Point(self._x1, self._y1), Point(self._x2, self._y1))
             self._win.draw_line(line, "black")
+        else:
+            line = Line(Point(self._x1, self._y1), Point(self._x2, self._y1))
+            self._win.draw_line(line, "white")
             
         if self.has_right_wall:
             line = Line(Point(self._x2, self._y1), Point(self._x2, self._y2))
             self._win.draw_line(line, "black")
+        else:
+            line = Line(Point(self._x2, self._y1), Point(self._x2, self._y2))
+            self._win.draw_line(line, "white")
             
         if self.has_bottom_wall:
             line = Line(Point(self._x1, self._y2), Point(self._x2, self._y2))
             self._win.draw_line(line, "black")
+        else:
+            line = Line(Point(self._x1, self._y2), Point(self._x2, self._y2))
+            self._win.draw_line(line, "white")
 
     def draw_move(self, to_cell, undo=False):
         """
@@ -159,6 +171,7 @@ class Maze:
         # Initialize the grid of cells
         self.cells = []
         self._create_cells()
+        self._break_entrance_and_exit()
         
     def _create_cells(self):
         """
@@ -206,4 +219,18 @@ class Maze:
         """
         if self._win is not None:
             self._win.redraw()
-            sleep(0.05)
+            sleep(0.01)
+
+    def _break_entrance_and_exit(self):
+        """
+        Remove walls to create entrance at top-left and exit at bottom-right
+        """
+        # Break the top wall of the entrance (top-left cell)
+        self.entrance_cell = self.cells[0][0]
+        self.entrance_cell.has_top_wall = False
+        self.entrance_cell.draw()
+        
+        # Break the bottom wall of the exit (bottom-right cell)
+        self.exit_cell = self.cells[self._num_cols - 1][self._num_rows - 1]
+        self.exit_cell.has_bottom_wall = False
+        self.exit_cell.draw()
