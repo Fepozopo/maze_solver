@@ -21,7 +21,6 @@ class Tests(unittest.TestCase):
         num_cols = 12
         num_rows = 10
         m1 = Maze(0, 0, num_rows, num_cols, 10, 10)
-        m1._draw_cell(0, 0)
         self.assertEqual(
             m1.cells[0][0]._x1,
             0,
@@ -55,6 +54,45 @@ class Tests(unittest.TestCase):
         self.assertEqual(
             m1.exit_cell.has_bottom_wall,
             False,
+        )
+
+    def test_maze_break_walls(self):
+        num_cols = 12
+        num_rows = 10
+        m1 = Maze(0, 0, num_rows, num_cols, 10, 10, win=None, seed=0)
+
+        self.assertEqual(
+            m1.cells[0][0].has_left_wall,
+            True,
+        )
+        self.assertEqual(
+            m1.cells[0][0].has_right_wall,
+            True,
+        )
+        self.assertEqual(
+            m1.cells[0][0].has_top_wall,
+            False,
+        )
+        self.assertEqual(
+            m1.cells[0][0].has_bottom_wall,
+            False,
+        )
+
+        self.assertEqual(
+            m1.cells[5][5].has_left_wall,
+            True,
+        )
+        self.assertEqual(
+            m1.cells[5][5].has_right_wall,
+            False,
+        )
+        self.assertEqual(
+            m1.cells[5][5].has_top_wall,
+            False,
+        )
+        self.assertEqual(
+            m1.cells[5][5].has_bottom_wall,
+            True,
         )
 
 

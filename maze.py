@@ -1,5 +1,6 @@
 from tkinter import Tk, BOTH, Canvas
 from time import sleep
+import random
 
 
 class Window:
@@ -14,17 +15,17 @@ class Window:
         self.__root.protocol("WM_DELETE_WINDOW", self.close)
 
     def redraw(self):
-        '''
+        """
         Call the root widget's update_idletasks() and update() methods to redraw the canvas.
-        '''
+        """
         self.__root.update_idletasks()
         self.__root.update()
 
     def wait_for_close(self):
-        '''
+        """
         Set the data member we created to track the "running" state of the window to True.
         Next, it should call self.redraw() over and over as long as the running state remains True.
-        '''
+        """
         self.running = True
         while self.running:
             self.redraw()
@@ -70,6 +71,7 @@ class Cell:
         self._y1 = y1
         self._y2 = y2
         self._win = win
+        self.visited = False
         
         # By default, all walls exist
         self.has_left_wall = True
@@ -147,6 +149,7 @@ class Maze:
         cell_size_x,
         cell_size_y,
         win=None,
+        seed=None
     ):
         """
         Initialize the maze with a grid of cells
@@ -167,11 +170,19 @@ class Maze:
         self._cell_size_x = cell_size_x
         self._cell_size_y = cell_size_y
         self._win = win
+        self.seed = seed
+
+        # Set the random seed
+        if self.seed is not None:
+            random.seed(self.seed)
         
         # Initialize the grid of cells
         self.cells = []
         self._create_cells()
         self._break_entrance_and_exit()
+
+        # Break the walls to create the maze
+        self._break_walls_r(0, 0)
         
     def _create_cells(self):
         """
@@ -228,9 +239,170 @@ class Maze:
         # Break the top wall of the entrance (top-left cell)
         self.entrance_cell = self.cells[0][0]
         self.entrance_cell.has_top_wall = False
-        self.entrance_cell.draw()
+        if self._win is not None:
+            self.entrance_cell.draw()
         
         # Break the bottom wall of the exit (bottom-right cell)
         self.exit_cell = self.cells[self._num_cols - 1][self._num_rows - 1]
         self.exit_cell.has_bottom_wall = False
-        self.exit_cell.draw()
+        if self._win is not None:
+            self.exit_cell.draw()
+
+    def _break_walls_r(self, i, j):
+        """
+        A depth-first traversal through the cells, breaking down walls as it goes.
+        Uses an iterative approach to prevent stack overflow for large mazes.
+        """
+        # Mark the current cell as visited
+        self.cells[i][j].visited = True
+
+        # In an infinite loop...
+        while True:
+            # List to hold unvisited neighbors
+            to_visit = []
+
+            # Check all adjacent cells
+            # Left neighbor
+            if i > 0 and not self.cells[i - 1][j].visited:
+                to_visit.append(("left", i - 1, j))
+            # Right neighbor
+            if i < self._num_cols - 1 and not self.cells[i + 1][j].visited:
+                to_visit.append(("right", i + 1, j))
+            # Top neighbor
+            if j > 0 and not self.cells[i][j - 1].visited:
+                to_visit.append(("up", i, j - 1))
+            # Bottom neighbor
+            if j < self._num_rows - 1 and not self.cells[i][j + 1].visited:
+                to_visit.append(("down", i, j + 1))
+
+            # If no unvisited neighbors, we're done with this cell
+            if len(to_visit) == 0:
+                if self._win is not None:
+                    self.cells[i][j].draw()
+                    self._animate()
+                return
+            
+            # Choose a random direction and get its coordinates
+            direction, next_i, next_j = random.choice(to_visit)
+            
+            # Break walls between current cell and chosen cell
+            if direction == "left":
+                self.cells[i][j].has_left_wall = False
+                self.cells[next_i][next_j].has_right_wall = False
+            elif direction == "right":
+                self.cells[i][j].has_right_wall = False
+                self.cells[next_i][next_j].has_left_wall = False
+            elif direction == "up":
+                self.cells[i][j].has_top_wall = False
+                self.cells[next_i][next_j].has_bottom_wall = False
+            elif direction == "down":
+                self.cells[i][j].has_bottom_wall = False
+                self.cells[next_i][next_j].has_top_wall = False
+                
+            # Draw the current cell
+            if self._win is not None:
+                self.cells[i][j].draw()
+                self.cells[next_i][next_j].draw()
+                self._animate()
+                
+            # Recursively visit the next cell
+            self._break_walls_r(next_i, next_j)
+
+    def _reset_cells_visited(self):
+        """
+        Reset the visited state of all cells
+        """
+        for i in range(self._num_cols):
+            for j in range(self._num_rows):
+                self.cells[i][j].visited = False
+
+    def solve(self):
+        """
+        Solve the maze starting from the entrance.
+        Returns True if a solution is found, False otherwise.
+        """
+        self._reset_cells_visited()
+    
+        # Initialize stack with starting position
+        stack = [(0, 0, None)]  # (i, j, previous_cell)
+        path = []  # Keep track of solution path
+        
+        while stack:
+            i, j, previous = stack.pop()
+            current_cell = self.cells[i][j]
+            
+            if not current_cell.visited:
+                # Mark current cell as visited
+                current_cell.visited = True
+                
+                # Draw move from previous cell if it exists
+                if previous is not None:
+                    previous.draw_move(current_cell)
+                    path.append((previous, current_cell))
+                
+                # Check if we reached the exit
+                if i == self._num_cols - 1 and j == self._num_rows - 1:
+                    print("Maze solved: True")
+                    return True
+                
+                # For backtracking visualization, we'll add cells in reverse order
+                # so that we explore in a more logical order
+                moves = []
+                
+                # Check up
+                if (j > 0 and 
+                    not current_cell.has_top_wall and 
+                    not self.cells[i][j - 1].visited):
+                    moves.append((i, j - 1))
+                    
+                # Check down
+                if (j < self._num_rows - 1 and 
+                    not current_cell.has_bottom_wall and 
+                    not self.cells[i][j + 1].visited):
+                    moves.append((i, j + 1))
+                    
+                # Check left
+                if (i > 0 and 
+                    not current_cell.has_left_wall and 
+                    not self.cells[i - 1][j].visited):
+                    moves.append((i - 1, j))
+                    
+                # Check right
+                if (i < self._num_cols - 1 and 
+                    not current_cell.has_right_wall and 
+                    not self.cells[i + 1][j].visited):
+                    moves.append((i + 1, j))
+                
+                # If we hit a dead end (no moves available)
+                if not moves:
+                    # Backtrack by undoing the last move
+                    while path and not moves:
+                        prev_cell, curr_cell = path.pop()
+                        prev_cell.draw_move(curr_cell, undo=True)  # Draw gray line
+                        
+                        # Try to find a new move from the previous cell
+                        prev_i = (prev_cell._x1 + prev_cell._x2) // (2 * self._cell_size_x)
+                        prev_j = (prev_cell._y1 + prev_cell._y2) // (2 * self._cell_size_y)
+                        
+                        # Check for available moves from this previous position
+                        if prev_i > 0 and not prev_cell.has_left_wall and not self.cells[prev_i - 1][prev_j].visited:
+                            moves.append((prev_i - 1, prev_j))
+                        if prev_i < self._num_cols - 1 and not prev_cell.has_right_wall and not self.cells[prev_i + 1][prev_j].visited:
+                            moves.append((prev_i + 1, prev_j))
+                        if prev_j > 0 and not prev_cell.has_top_wall and not self.cells[prev_i][prev_j - 1].visited:
+                            moves.append((prev_i, prev_j - 1))
+                        if prev_j < self._num_rows - 1 and not prev_cell.has_bottom_wall and not self.cells[prev_i][prev_j + 1].visited:
+                            moves.append((prev_i, prev_j + 1))
+                        
+                        if moves:
+                            stack.append((prev_i, prev_j, None))  # Add the backtrack position
+                
+                # Add all valid moves to the stack
+                for next_i, next_j in moves:
+                    stack.append((next_i, next_j, current_cell))
+                    
+            self._animate()
+    
+        print("Maze solved: False")
+        return False
+    

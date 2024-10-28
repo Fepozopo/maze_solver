@@ -1,14 +1,29 @@
-from maze import Window, Line, Point, Cell, Maze
+from maze import Window, Maze
+from time import sleep
 
 
 def main():
-    window = Window(800, 600)
-    num_cols = 16
-    num_rows = 12
+    win = Window(800, 600)
+    num_cols = 15
+    num_rows = 11
     
-    maze = Maze(0, 0, num_rows, num_cols, 50, 50, window)
+    print("Generating maze...")
+    maze = Maze(10, 10, num_rows, num_cols, 50, 50, win)
+    
+    # Pause briefly to see the generated maze
+    print("Maze generated. Starting solve in 1 second...")
+    sleep(1)
+    
+    # Try to solve the maze
+    solved = maze.solve()
+    
+    if solved:
+        print("Solution found! Close the window to exit.")
+    else:
+        print("No solution found! Close the window to exit.")
 
-    window.wait_for_close()
+    # Keep window open
+    win.wait_for_close()
 
 
 
