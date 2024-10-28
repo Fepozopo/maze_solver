@@ -1,4 +1,4 @@
-from tkinter import Tk, BOTH, Canvas
+from tkinter import Tk, Canvas
 from time import sleep
 import random
 
@@ -379,6 +379,7 @@ class Maze:
                     while path and not moves:
                         prev_cell, curr_cell = path.pop()
                         prev_cell.draw_move(curr_cell, undo=True)  # Draw gray line
+                        previous = prev_cell
                         
                         # Try to find a new move from the previous cell
                         prev_i = (prev_cell._x1 + prev_cell._x2) // (2 * self._cell_size_x)
@@ -398,8 +399,18 @@ class Maze:
                             stack.append((prev_i, prev_j, None))  # Add the backtrack position
                 
                 # Add all valid moves to the stack
-                for next_i, next_j in moves:
-                    stack.append((next_i, next_j, current_cell))
+                next_move = random.choice(moves)
+                next_i = next_move[0]
+                next_j = next_move[1]
+                
+                # Add the current cell to the stack
+                current_cell = self.cells[next_i][next_j]
+                stack.append((next_i, next_j, current_cell))
+                
+                # Draw move from previous cell if it exists
+                if previous is not None:
+                    previous.draw_move(current_cell)
+                    path.append((previous, current_cell))
                     
             self._animate()
     
